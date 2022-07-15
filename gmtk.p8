@@ -18,11 +18,14 @@ end
 function init_game()
  _ents={}
  player=ent()
+ player+="collide"
  player+=cmp("pos",{x=64,y=64})
+ player+=cmp("spd",{spdx=0,spdy=0})
+ player+=cmp("has_drag",{drag=1})
  player+=cmp("render",{anim=anim_idle})
  player+=cmp("dice",{dval=1})
  start_weapon=ent()
- start_weapon+=cmp("wpn_stats",{cooldown=10,curr_cooldown=0,nb_bullets=3})
+ start_weapon+=cmp("wpn_stats",{cooldown=10,curr_cooldown=0,nb_bullets=3,bull_cooldown=2,curr_bull_cooldown=0})
  player+=cmp("has_wpn",{wpn={start_weapon}})
 end
 
@@ -111,36 +114,50 @@ function _update()
  if mode==10 then
   sys_shoot()
   sys_roll()
-  sys_mov_bullets()
   sys_cooldown()
-  if(btnp(⬆️)) player.y-=1
-  if(btnp(⬇️)) player.y+=1
-  if(btnp(⬅️)) player.x-=1
-  if(btnp(➡️)) player.x+=1
-  if stat(34)&1>0
-   and not is(player.wpn[player.dval],"shooting")
-   and not is(player,"rolling")
-   then
-   local w=player.wpn[player.dval]
-   if w.curr_cooldown==0 then
-    w+=cmp("shooting",{bullets_left=3})
-    w+=cmp("pos",{x=player.x,y=player.y})
-    local dx=stat(32)-player.x
-    local dy=stat(33)-player.y
-    local d=1+sqrt(dx*dx+dy*dy)
-    w+=cmp("spd",{spdx=dx/d,spdy=dy/d})
-    w.curr_cooldown=w.cooldown
-   end
-  end
-  if stat(34)&2>0 and not is(player,"rolling") then
-   -- todo: roll dans la direction des croix dir.
+  sys_update_pos()
+  player_input()
+ end
+end
+
+function player_input()
+ if(btn(⬆️)) update_spd(0,-1)
+ if(btn(⬇️)) update_spd(0,1)
+ if(btn(⬅️)) update_spd(-1,0)
+ if(btn(➡️)) update_spd(1,0)
+ if stat(34)&1>0
+  and not is(player.wpn[player.dval],"shooting")
+  and not is(player,"rolling")
+  then
+  local w=player.wpn[player.dval]
+  if w.curr_cooldown==0 then
+   w+=cmp("shooting",{bullets_left=3})
+   w+=cmp("wpn_pos",{wpn_x=player.x,wpn_y=player.y})
    local dx=stat(32)-player.x
    local dy=stat(33)-player.y
    local d=1+sqrt(dx*dx+dy*dy)
-   player+=cmp("rolling",{roll_spdx=dx/d,roll_spdy=dy/d,roll_time=10,roll_countdown=30})
-   player.anim=anim_roll
+   local bull_speed=3
+   w+=cmp("wpn_spd",{wpn_spdx=bull_speed*dx/d,wpn_spdy=bull_speed*dy/d})
+   w.curr_cooldown=w.cooldown
   end
  end
+ if stat(34)&2>0 and not is(player,"rolling") then
+  -- todo: roll dans la direction des croix dir.
+  local dx=stat(32)-player.x
+  local dy=stat(33)-player.y
+  local d=1+sqrt(dx*dx+dy*dy)
+  player+=cmp("rolling",{roll_spdx=dx/d,roll_spdy=dy/d,roll_time=10,roll_countdown=30})
+  player.anim=anim_roll
+ end
+end
+
+function update_spd(dx,dy)
+ local factor=1.2
+ local max_spd=4
+ player.spdx+=dx*factor
+ if(player.spdx>max_spd) player.spdx=max_spd
+ if(player.spdx<-max_spd) player.spdx=-max_spd
+ player.spdy+=dy*factor
 end
 
 function sys_roll()
@@ -155,18 +172,24 @@ end
 
 sys_shoot=sys({"shooting"},
  function(e)
-	 bullet=ent()
-	 bullet+="bullet"
-	 ?e.x,90,90
-	 bullet+=cmp("pos",{x=e.x,y=e.y})
-	 bullet+=cmp("render",{anim=anim_bullet})
-	 bullet+=cmp("spd",{spdx=e.spdx,spdy=e.spdy})
-	 e.bullets_left-=1
-	 if e.bullets_left==0 then
-	  -- stop shooting
-	  e-="shooting"
-	  e-="pos"
-	  e-="spd"
+  if e.curr_bull_cooldown==0 then
+		 bullet=ent()
+		 bullet+="bullet"
+		 bullet+="temporary"
+		 bullet+=cmp("pos",{x=e.wpn_x,y=e.wpn_y})
+		 bullet+=cmp("render",{anim=anim_bullet})
+		 bullet+=cmp("spd",{spdx=e.wpn_spdx,spdy=e.wpn_spdy})
+		 e.bullets_left-=1
+		 if e.bullets_left==0 then
+		  -- stop shooting
+		  e-="shooting"
+		  e-="wpn_pos"
+		  e-="wpn_spd"
+		 else
+ 		 e.curr_bull_cooldown=e.bull_cooldown
+		 end
+	 else
+	  e.curr_bull_cooldown-=1
 	 end
  end)
 
@@ -175,11 +198,34 @@ sys_cooldown=sys({"wpn_stats"},
   if(e.curr_cooldown>0) e.curr_cooldown-=1
  end)
 
-sys_mov_bullets=sys({"bullet"},
+sys_update_pos=sys({"pos","spd"},
  function(e)
   e.x+=e.spdx
   e.y+=e.spdy
-
+  if is(e,"collide") then
+	  if(e.x<0) e.x=0 e.spdx=0
+	  if(e.x>120) e.x=120 e.spdx=0
+	  if(e.y<0) e.y=0 e.spdy=0
+	  if(e.y>120) e.y=120 e.spdy=0
+	  if is(e,"has_drag") then
+	   if e.spdx>0 then
+	    e.spdx-=e.drag
+	    if(e.spdx<0) e.spdx=0
+	   elseif e.spdx<0 then
+	    e.spdx+=e.drag
+	    if(e.spdx>0) e.spdx=0   
+	   end
+	   if e.spdy>0 then
+	    e.spdy-=e.drag
+	    if(e.spdy<0) e.spdy=0
+	   elseif e.spdy<0 then
+	    e.spdy+=e.drag
+	    if(e.spdy>0) e.spdy=0
+	   end
+	  end
+	 elseif is(e,"temporary") then -- destroy outside map
+	 	if(e.x<0 or e.x>130 or e.y<0 or e.y>130) del(_ents,e)
+  end
  end)
 -->8
 -- draw
