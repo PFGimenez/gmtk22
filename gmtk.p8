@@ -7,9 +7,11 @@ function _init()
 	-- font
 	poke(0x5600,unpack(split"8,8,10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,24,24,24,24,0,24,0,0,54,54,18,0,0,0,0,0,54,127,54,127,54,0,0,24,124,30,60,120,62,24,0,6,102,48,24,12,102,96,0,28,54,54,28,110,54,108,0,24,24,8,0,0,0,0,0,24,12,6,6,6,12,24,0,24,48,96,96,96,48,24,0,24,126,60,24,60,126,24,0,0,24,24,126,24,24,0,0,0,0,0,0,0,12,12,6,0,0,0,126,0,0,0,0,0,0,0,0,0,0,12,0,0,96,48,24,12,6,0,0,0,0,60,118,110,102,60,0,0,0,24,28,24,24,60,0,0,0,62,96,60,6,126,0,0,0,62,96,56,96,62,0,0,0,56,60,54,126,48,0,0,0,126,6,62,96,62,0,0,0,60,6,62,102,60,0,0,0,126,96,48,24,12,0,0,0,60,102,60,102,60,0,0,0,60,102,124,96,60,0,0,0,0,12,0,12,0,0,0,0,0,12,0,12,12,6,48,24,12,6,12,24,48,0,0,0,0,126,0,0,0,0,12,24,48,96,48,24,12,0,0,60,102,48,24,0,24,0,0,60,102,118,110,118,60,0,0,0,60,102,126,102,102,0,0,0,62,102,62,102,62,0,0,0,60,102,6,102,60,0,0,0,62,102,102,102,62,0,0,0,126,6,30,6,126,0,0,0,126,6,30,6,6,0,0,0,124,6,118,102,124,0,0,0,102,102,126,102,102,0,0,0,60,24,24,24,60,0,0,0,96,96,96,102,60,0,0,0,102,54,30,54,102,0,0,0,6,6,6,6,126,0,0,0,66,102,126,126,102,0,0,0,102,110,126,118,102,0,0,0,60,102,102,102,60,0,0,0,62,102,62,6,6,0,0,0,60,102,102,54,108,0,0,0,62,102,126,54,102,0,0,0,124,6,60,96,62,0,0,0,126,24,24,24,24,0,0,0,102,102,102,102,60,0,0,0,102,102,102,60,24,0,0,0,102,126,126,102,66,0,0,0,102,60,24,60,102,0,0,0,102,102,60,24,24,0,0,0,126,48,24,12,126,0,62,6,6,6,6,6,62,0,0,6,12,24,48,96,0,0,62,48,48,48,48,48,62,0,24,60,102,0,0,0,0,0,0,0,0,0,0,0,0,126,12,24,48,0,0,0,0,0,0,60,102,102,126,102,102,0,0,62,102,62,102,102,62,0,0,60,102,6,6,102,60,0,0,62,102,102,102,102,62,0,0,126,6,30,6,6,126,0,0,126,6,30,6,6,6,0,0,124,6,118,102,102,124,0,0,102,102,126,102,102,102,0,0,60,24,24,24,24,60,0,0,96,96,96,96,102,60,0,0,102,54,30,54,102,102,0,0,6,6,6,6,6,126,0,0,66,102,126,126,102,102,0,0,102,110,126,118,102,102,0,0,60,102,102,102,102,60,0,0,62,102,102,62,6,6,0,0,60,102,102,102,54,108,0,0,62,102,102,62,54,102,0,0,124,6,60,96,96,62,0,0,126,24,24,24,24,24,0,0,102,102,102,102,102,60,0,0,102,102,102,102,60,24,0,0,102,102,126,126,102,66,0,0,102,60,24,60,102,102,0,0,102,102,60,24,24,24,0,0,126,48,24,12,6,126,0,56,12,12,6,12,12,56,0,24,24,24,24,24,24,24,24,14,24,24,48,24,24,14,0,44,26,0,0,0,0,0,0,0,28,54,28,0,0,0,0,255,255,255,255,255,255,255,255,85,170,85,170,85,170,85,170,0,195,255,189,189,255,126,0,60,126,255,129,195,231,126,60,17,68,17,68,17,68,17,0,4,12,252,124,62,63,48,32,60,110,223,255,255,255,126,60,102,255,255,255,126,60,24,0,24,60,102,231,102,60,24,0,24,24,0,60,90,24,60,102,60,126,255,126,82,82,94,0,60,110,231,227,227,231,110,60,0,255,153,153,255,129,255,0,56,120,216,24,30,31,14,0,0,126,195,219,219,195,126,0,8,28,62,127,62,28,8,0,0,0,0,0,85,0,0,0,60,118,231,199,199,231,118,60,0,8,28,127,62,28,54,0,127,34,20,8,8,20,42,127,60,126,231,195,129,255,126,60,0,5,82,32,0,0,0,0,0,17,42,68,0,0,0,0,0,126,219,231,231,219,126,0,255,0,255,0,255,0,255,0,85,85,85,85,85,85,85,85,255,129,129,129,129,129,129,255,255,195,165,153,153,165,195,255,0,126,62,30,62,118,34,0,8,28,62,127,127,62,8,62,8,28,28,107,127,107,8,28,28,34,73,93,73,34,28,0"))
 	--print("\014aaaAAA")
-	
+--	srand(0)
 	-- enable mouse
 	poke(0x5f2d, 1)
+--	palt(0,false)
+--	palt(1,true)
 	init_game()
 	frame=0
 	roll_cooldown=20
@@ -21,9 +23,12 @@ end
 
 function init_game()
  _ents={}
+ _cmps={}
+ _msgs={}
+ depth=0
  player=ent()
  player+="collide"
- player+=cmp("destructible",{hp=10,hitboxx=1,hitboxy=1,hitboxw=6,hitboxh=6,force_nb=1})
+ player+=cmp("destructible",{hp=10,hitboxx=-2,hitboxy=-2,hitboxw=6,hitboxh=6,force_nb=1})
  player+=cmp("can_roll",{curr_roll_cooldown=0})
  player+=cmp("pos",{x=64,y=64})
  player+=cmp("spd",{spdx=0,spdy=0})
@@ -33,14 +38,11 @@ function init_game()
  start_weapon=spawn_rifle()
  start_weapon.wielder=player
  player+=cmp("has_wpn",{curr_wpn=1,wpn={start_weapon}})
- 
- for i=1,30 do
-  spawn_enemy()
- end
+ mapgen()
 end
 
 -->8
--- ecs
+-- ecs and sort
 
 function ent()
  -- you can remove this function
@@ -58,6 +60,7 @@ function ent()
    end
   end
  end
+ 
  return add(_ents,
   setmetatable({},{
   -- check value in components
@@ -79,10 +82,12 @@ function ent()
    if type(cmp)=="string" then
     assert(rawget(self,cmp)==nil,"already existing: "..cmp)
     rawset(self,cmp,{})
+    add(_cmps[cmp],self)
    else
     -- check if already existing
     assert(rawget(self,cmp._cn)==nil,"already existing: "..cmp._cn)
     rawset(self,cmp._cn,cmp)
+    add(_cmps[cmp._cn],self)
     -- remove this function if you remove asserts
     -- it's useful but costly
     cmp._cn=nil -- technically not required
@@ -93,13 +98,22 @@ function ent()
   __sub=function(self,cn)
    -- double removal is not a problem
    rawset(self,cn,nil)
+   del(_cmps[cn],self)
    return self
   end}))
 end
 
 function cmp(cn,t)
+ if(_cmps[cn]==nil) _cmps[cn]={}
  t._cn=cn
  return t
+end
+
+function del_ent(e)
+ for k,_ in pairs(e) do
+  del(_cmps[k],e)
+ end
+ del(_ents,e)
 end
 
 function is(e,cn)
@@ -108,7 +122,7 @@ end
 
 function sys(cmps,f)
  return function(...)
-  for e in all(_ents) do
+  for e in all(_cmps[cmps[1]]) do
    for cn in all(cmps) do
     if(not rawget(e,cn)) goto _
    end
@@ -118,7 +132,26 @@ function sys(cmps,f)
  end
 end
 
+-- bubble sort
 
+function sort_ents()
+ local n=#_ents
+ for i=1,n do
+  local swapped=false
+  for j=2,n-i+1 do
+   local e1,e2=_ents[j],_ents[j-1]
+   local y1=rawget(e1,"destructible") and e1.y+e1.hitboxy+e1.hitboxh or 999
+   local y2=rawget(e2,"destructible") and e2.y+e2.hitboxy+e2.hitboxh or 999
+   if y1<y2 then
+    local tmp=_ents[j]
+    _ents[j]=_ents[j-1]
+    _ents[j-1]=tmp
+    swapped=true
+   end
+  end
+  if(not swapped) return
+ end
+end 
 
 -- components
 --"collide"
@@ -127,13 +160,13 @@ end
 --"has_drag": drag virer?
 --"render": anim face_left render_order
 --"dice": dval
---"wpn_stats": cooldown curr_cooldown nb_bullets bull_cooldown curr_bull_cooldown wielder
+--"wpn_stats": wpn_dmg cooldown curr_cooldown nb_bullets bull_cooldown curr_bull_cooldown wielder spread
 --"has_wpn": wpn curr_wpn
 --"shooting": bullets_left targetx targety
 --"rolling" roll_time
---"bullet" force_src
+--"bullet" bull_dmg force_src
 --"destructible" hp hitboxx hitboxy hitboxw hitboxh force_nb
-
+--"dying" dying_curr
 -->8
 -- update and systems
 
@@ -203,24 +236,25 @@ function update_spd(dx,dy)
 end
 
 function sys_collision()
- for b in all(_ents) do
-  if is(b,"bullet") then
-   for e in all(_ents) do
-    -- no friendly fire
-    if is(e,"destructible") and b.force_src!=e.force_nb then
-     local x=e.x+e.hitboxx
-     local y=e.y+e.hitboxy
-     if b.x>=x
-      and b.y>=y
-      and b.x<=x+e.hitboxw
-      and b.y<=y+e.hitboxh then
-      -- collision!
-      del(_ents,b) -- destroy bullet
-      e.hp-=1
-      if e.hp==0 then
-	      e+=cmp("dying",{dying_curr=20})
-	      e.anim=anim_enemy_die
-      end
+ for b in all(_cmps["bullet"]) do
+  for e in all(_cmps["destructible"]) do
+   -- no friendly fire
+   if b.force_src!=e.force_nb then
+    local x=e.x+e.hitboxx
+    local y=e.y+e.hitboxy
+    if b.x>=x and b.y>=y
+     and b.x<x+e.hitboxw
+     and b.y<y+e.hitboxh then
+     -- collision!
+     del_ent(b) -- destroy bullet
+     e.hp-=b.bull_dmg
+     add_msg(e,"-"..b.bull_dmg)
+     if e.hp==0 then
+      e+=cmp("dying",{dying_curr=20})
+      e-="destructible"
+      e-="ai"
+      e-="spd"
+      e.anim=anim_enemy_die
      end
     end
    end
@@ -243,7 +277,7 @@ sys_shoot=sys({"shooting"},
  function(e)
   if e.curr_bull_cooldown==0 then
 		 bullet=ent()
-		 bullet+=cmp("bullet",{force_src=e.wielder.force_nb})
+		 bullet+=cmp("bullet",{force_src=e.wielder.force_nb,bull_dmg=e.wpn_dmg})
 		 bullet+=cmp("pos",{x=e.wielder.x,y=e.wielder.y})
 		 bullet+=cmp("render",{anim=anim_bullet,face_left=true,render_order=2})
 		 
@@ -251,7 +285,17 @@ sys_shoot=sys({"shooting"},
    local dy=e.targety-e.wielder.y
    local d=1+sqrt(dx*dx+dy*dy)
    local bull_speed=3
-		 bullet+=cmp("spd",{spdx=bull_speed*dx/d,spdy=bull_speed*dy/d})
+   local spdx=bull_speed*dx/d
+   local spdy=bull_speed*dy/d
+   if e.spread>0 then
+    local a=rnd(e.spread*0.01)-e.spread*0.01/2
+    -- rotation matrix
+    local c,s=cos(a),sin(a)
+    local tmp=spdx*c-spdy*s
+    spdy=s*spdx+c*spdy
+    spdx=tmp
+   end
+		 bullet+=cmp("spd",{spdx=spdx,spdy=spdy})
 		 e.bullets_left-=1
 		 if e.bullets_left==0 then
 		  -- stop shooting
@@ -272,40 +316,52 @@ sys_wpn_cooldown=sys({"wpn_stats"},
 sys_die=sys({"dying"},
  function(e)
   e.dying_curr-=1
-  if(e.dying_curr==0) del(_ents,e)
+  if(e.dying_curr==0) del_ent(e)
  end)
 
 sys_update_pos=sys({"pos","spd","render"},
  function(e)
-  if(e.spdx>0) e.face_left=false
-  if(e.spdx<0) e.face_left=true
-  e.x+=e.spdx
-  e.y+=e.spdy
-  if is(e,"collide") then
-	  if(e.x<0) e.x=0 e.spdx=0
-	  if(e.x>120) e.x=120 e.spdx=0
-	  if(e.y<0) e.y=0 e.spdy=0
-	  if(e.y>120) e.y=120 e.spdy=0
-	  -- no drag when rolling
-	  -- only player has drag?
-	  if is(e,"has_drag") and not is(e,"rolling") then
-	   if e.spdx>0 then
-	    e.spdx-=e.drag
-	    if(e.spdx<0) e.spdx=0
-	   elseif e.spdx<0 then
-	    e.spdx+=e.drag
-	    if(e.spdx>0) e.spdx=0   
-	   end
-	   if e.spdy>0 then
-	    e.spdy-=e.drag
-	    if(e.spdy<0) e.spdy=0
-	   elseif e.spdy<0 then
-	    e.spdy+=e.drag
-	    if(e.spdy>0) e.spdy=0
-	   end
+  -- hack: bullet have no sprite symmetry
+  if not is(e,"bullet") then
+   if(e.spdx>0) e.face_left=false
+   if(e.spdx<0) e.face_left=true
+  end
+  local nextx=e.x+e.spdx
+  local nexty=e.y+e.spdy
+  -- collision with map
+  if not fget(mget(nextx\8,nexty\8),0) then
+   e.spdx=0
+   e.spdy=0
+   if(is(e,"bullet")) del_ent(e)
+  else
+	  e.x+=e.spdx
+	  e.y+=e.spdy
+	  if is(e,"collide") then
+		  if(e.x<0) e.x=0 e.spdx=0
+		  if(e.x>120) e.x=120 e.spdx=0
+		  if(e.y<0) e.y=0 e.spdy=0
+		  if(e.y>120) e.y=120 e.spdy=0
+		  -- no drag when rolling
+		  -- only player has drag?
+		  if is(e,"has_drag") and not is(e,"rolling") then
+		   if e.spdx>0 then
+		    e.spdx-=e.drag
+		    if(e.spdx<0) e.spdx=0
+		   elseif e.spdx<0 then
+		    e.spdx+=e.drag
+		    if(e.spdx>0) e.spdx=0   
+		   end
+		   if e.spdy>0 then
+		    e.spdy-=e.drag
+		    if(e.spdy<0) e.spdy=0
+		   elseif e.spdy<0 then
+		    e.spdy+=e.drag
+		    if(e.spdy>0) e.spdy=0
+		   end
+		  end
+		 elseif is(e,"bullet") then -- destroy outside map
+		 	if(e.x<0 or e.x>130 or e.y<0 or e.y>130) del_ent(e)
 	  end
-	 elseif is(e,"bullet") then -- destroy outside map
-	 	if(e.x<0 or e.x>130 or e.y<0 or e.y>130) del(_ents,e)
   end
  end)
 -->8
@@ -313,10 +369,12 @@ sys_update_pos=sys({"pos","spd","render"},
 
 function _draw()
 	cls(1)
+	map()
  spr(16,stat(32)-3,stat(33)-3)
  sys_draw(1) -- char
  sys_draw(2) -- bullets
--- sys_draw_hitbox()
+ sys_draw_hitbox()
+ render_msgs()
 end
 
 -- todo: render order
@@ -324,7 +382,7 @@ end
 sys_draw=sys({"render","pos"},
  function(e,layer)
   if e.render_order==layer then
-   spr(e.anim(),flr(e.x),flr(e.y),1,1,not e.face_left)
+   spr(e.anim(e),flr(e.x)-3,flr(e.y)-3,1,1,not e.face_left)
   end
  end)
 
@@ -335,37 +393,58 @@ sys_draw_hitbox=sys({"destructible","pos"},
   rect(x,y,x+e.hitboxw-1,y+e.hitboxh-1,9)
  end)
  
-function anim_idle()
- return 1
+function anim_idle(e)
+ return 7
 end
 
-function anim_roll()
+function anim_roll(e)
  return 3
 end
 
-function anim_bullet()
- return 2
+function anim_bullet(e)
+ return 8
 end
 
-function anim_enemy_idle()
+function anim_enemy_idle(e)
  return 4
 end
 
-function anim_enemy_move()
+function anim_enemy_move(e)
  return 5
 end
 
-function anim_enemy_die()
+function anim_enemy_die(e)
  return 6
 end
+
+-- msg
+function add_msg(e,str,col)
+ add(_msgs,{x=e.x+1,y=e.y-6,d=10,s=str,c=col or 7})
+end
+
+function render_msgs()
+ for m in all(_msgs) do
+  if m.d>0 then
+   m.d-=1
+   for dx=-1,1 do
+    for dy=-1,1 do
+     ?m.s,m.x+dx,m.y+dy,0
+    end
+   end
+   ?m.s,m.x,m.y,m.c
+   m.y-=.2
+  end
+ end
+end
+
 -->8
 -- spawn
 
-function spawn_enemy()
+function spawn_enemy(x,y)
  e=ent()
  e+="collide"
- e+=cmp("destructible",{hp=10,hitboxx=1,hitboxy=1,hitboxw=7,hitboxh=7,force_nb=2})
- e+=cmp("pos",{x=rnd(128),y=rnd(128)})
+ e+=cmp("destructible",{hp=1,hitboxx=-2,hitboxy=-2,hitboxw=7,hitboxh=7,force_nb=2})
+ e+=cmp("pos",{x=x,y=y})
  e+=cmp("spd",{spdx=0,spdy=0})
  e+=cmp("render",{anim=anim_enemy_idle,face_left=true,render_order=1})
  e+=cmp("ai",{ai_type=0,ai_state=0,ai_var=0})
@@ -376,7 +455,13 @@ end
 
 function spawn_rifle()
  local w=ent()
- w+=cmp("wpn_stats",{cooldown=10,curr_cooldown=0,nb_bullets=3,bull_cooldown=2,curr_bull_cooldown=0,wielder=false})
+ w+=cmp("wpn_stats",{wpn_dmg=1,cooldown=10,curr_cooldown=0,nb_bullets=3,bull_cooldown=2,curr_bull_cooldown=0,wielder=false,spread=5})
+ return w
+end
+
+function spawn_sniper()
+ local w=ent()
+ w+=cmp("wpn_stats",{wpn_dmg=3,cooldown=10,curr_cooldown=0,nb_bullets=1,bull_cooldown=2,curr_bull_cooldown=0,wielder=false,spread=0})
  return w
 end
 -->8
@@ -402,7 +487,7 @@ sys_ai_act=sys({"ai"},
     e.spdx=0
     e.spdy=0
     e.anim=anim_enemy_idle
-   elseif(e.ai_var==0 and rnd()<.01) then
+   elseif(e.ai_var==0 and rnd()<.1) then
     -- start walking
     e.ai_var=10
     local walk_speed=.5
@@ -414,35 +499,145 @@ sys_ai_act=sys({"ai"},
   end
  end)
 -->8
--- bubble sort
+-- mapgen
 
-function sort_ents()
- local n=#_ents
- for i=1,n do
-  local swapped=false
-  for j=2,n-i+1 do
-   local e1,e2=_ents[j],_ents[j-1]
-   local y1=rawget(e1,"destructible") and e1.y+e1.hitboxy+e1.hitboxh or 999
-   local y2=rawget(e2,"destructible") and e2.y+e2.hitboxy+e2.hitboxh or 999
-   if y1<y2 then
-    local tmp=_ents[j]
-    _ents[j]=_ents[j-1]
-    _ents[j-1]=tmp
-    swapped=true
+-- flags:
+-- 0: traversable
+
+dir={[0]={-1,0},{1,0},{0,-1},{0,1}}
+
+function mapgen()
+ ?"map gen...",50,60
+ flip()
+ depth+=1
+ first_step()
+ second_step()
+-- set_bitset_wall()
+ populate()
+ rerender=true
+end
+
+function first_step()
+-- crude mapgen
+ local dx=100
+ for x=dx,dx+7 do
+  for y=0,7 do
+   mset(x,y,2)
+  end
+ end
+ local seedx=dx+flr(rnd(7))
+ local seedy=flr(rnd(7))
+ local free=1
+ mset(seedx,seedy,1)
+ while free<30 do
+  local x=dx+flr(rnd(7))
+  local y=flr(rnd(7))
+  local prevx,prevy=nil,nil
+  while mget(x,y)==2 do
+   prevx=x
+   prevy=y
+   local d=dir[flr(rnd(4))]
+   x+=d[1]
+   y+=d[2]
+   if(x<dx) x=dx
+   if(y<0) y=0
+   if(x>dx+6) x=dx+6
+   if(y>6) y=6
+  end
+  if(prevx) mset(prevx,prevy,1) free+=1
+ end
+ for x=0,15 do
+  for y=0,15 do
+   -- border
+   if x==0 or y==0 or x==15 or y==15 then
+    mset(x,y,2)
+   else
+	   local x2=(x-1)\2
+	   local y2=(y-1)\2
+	   mset(x,y,mget(x2+dx,y2))
    end
   end
-  if(not swapped) return
  end
-end 
+end
+
+function second_step()
+ -- generate layout with automata
+ local dx=80
+ for x=0,4 do
+  for y=0,4 do
+	  mset(x+dx,y,flr(rnd(2)))
+	 end
+ end
+
+ -- modify map
+ for i=0,100 do
+  local x=1+flr(rnd(14))
+  local y=1+flr(rnd(14))
+  local t=mget(dx+x\10,y\10)
+  local w=mget(x,y)==2
+  local k=0
+  for x2=-1,1 do
+   for y2=-1,1 do
+    if((x2!=0 or y2!=0) and mget(x+x2,y+y2)==2) k+=1
+   end
+  end
+  
+  if t==0 then
+  -- big open space
+   if(w and k>1 and k<6) mset(x,y,1)
+  elseif t==1 then
+  -- pillars
+   if(x&1==0 and y&1==0 and not w and k==0) mset(x,y,2)
+   if(w and k>0 and k<3) mset(x,y,1)
+  end
+ end
+end
+
+function set_bitset_wall()
+	local delta={[0]={0,-1},{1,0},{0,1},{-1,0}}
+	for x=0,31 do
+	 for y=0,31 do
+	  local val=mget(x,y)
+	  if val==2 then
+		  local b=0
+		  for i=0,3 do
+		   local x2=x+delta[i][1]
+		   local y2=y+delta[i][2]
+		   if x2>=0 and x2<42 and y2>=0 and y2<42 and (mget(x2,y2)==2 or mget(x2,y2)>=48) then
+		    b+=1<<i
+		   end
+		  end
+	   mset(x,y,48+b)
+	  end
+	 end
+	end
+end
+
+function populate()
+ for i=1,30 do
+  local x,y=get_empty_space()
+  spawn_enemy(x*8+rnd(7),y*8+rnd(7))
+ end
+end
+
+function get_empty_space()
+ local x,y=nil,nil
+ while mget(x,y)!=1 do
+  x=flr(rnd(16))
+  y=flr(rnd(16))
+ end
+ return x,y
+end
+
 __gfx__
-00000000333333336000000033333333333333333333333333333333000000000000000000000000000000000000000000000000000000000000000000000000
-00000000366666630000000033666333333666333336663333388833000000000000000000000000000000000000000000000000000000000000000000000000
-00700700363333630000000036333633333636333636363633383833000000000000000000000000000000000000000000000000000000000000000000000000
-00077000367333630000000036333633333666333636663633388833000000000000000000000000000000000000000000000000000000000000000000000000
-00077000363333630000000036333633336363633363636333338333000000000000000000000000000000000000000000000000000000000000000000000000
-00700700363333630000000033666333333363333333633333338333000000000000000000000000000000000000000000000000000000000000000000000000
-00000000366666630000000033333333333636333336363333383833000000000000000000000000000000000000000000000000000000000000000000000000
-00000000333333330000000033333333333636333336363333383833000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000033333333333333333333333333333333333333330000000000000000000000000000000000000000000000000000000000000000
+00000000000000006666666033666333333666333336663333388833366666630000000000000000000000000000000000000000000000000000000000000000
+00700700000000006000006036333633333636333636363633383833363333630000000000000000000000000000000000000000000000000000000000000000
+00077000000000006000006036333633333666333636663633388833367333630006000000000000000000000000000000000000000000000000000000000000
+00077000000000006000006036333633336363633363636333338333363333630000000000000000000000000000000000000000000000000000000000000000
+00700700000600006000006033666333333363333333633333338333363333630000000000000000000000000000000000000000000000000000000000000000
+00000000000000006000006033333333333636333336363333383833366666630000000000000000000000000000000000000000000000000000000000000000
+00000000000000006666666033333333333636333336363333383833333333330000000000000000000000000000000000000000000000000000000000000000
 00060000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00060000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -450,6 +645,23 @@ __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00060000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00060000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+10001111066601111000011106660111100011110666011111000111066601110000111106660111000001110666011100011111066601110000011106660111
+06660111066601110666611106666111066601110666011110666111066661116666011166660111666661116666611166601111666601116666611166666111
+06660111066601110666611106666111066601110666011106666111066661116666011166660111666661116666611166660111666601116666611166666111
+06660111066601110666611110666111066601110666011106666111066661116666011166601111666661116666611166660111666601116666611166666111
+10001111100011111000011111000111066601110666011106660111066601110000111100011111000001110000011106660111066601110666011106660111
+11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
 __label__
 88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
 88888eeeeee888eeeeee888eeeeee888eeeeee888eeeeee888eeeeee888777777888888888888888888ff8ff8888228822888222822888888822888888228888
@@ -580,3 +792,6 @@ __label__
 82228222828282228888822282888222888288888888888888888888888888888888888888888888888882228222822282228288822282228882822288822288
 88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
 
+__gff__
+0001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
