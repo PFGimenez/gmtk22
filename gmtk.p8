@@ -11,7 +11,6 @@ function _init()
 	poke(0x5f2d, 1)
 	palt(14,true)
 	palt(0,false)
-	init_game()
 	frame=0
 	screen_shake=0
 	-- game feel variables
@@ -25,12 +24,14 @@ function _init()
 	
 	enemy_wait_shoot=5
  --
-	mode=10
 	-- modes:
 	-- 0: title
 	-- 10: game
 	-- 11: game over
 	-- 12: choose upgrade
+	-- 13: choose where upgrade
+		init_game()
+
 end
 
 function init_game()
@@ -45,14 +46,16 @@ function init_game()
  player+=cmp("pos",{x=-1,y=-1})
  player+=cmp("spd",{spdx=0,spdy=0})
  player+=cmp("render",{anim=anim_idle,face_left=true,render_order=1})
- player+=cmp("dice",{dval=1})
+ player+=cmp("dice",{dval=1,dice_mods={}})
  local wpn={}
  for i=1,6 do
-  start_weapon=i>2 and spawn_rifle() or spawn_shotgun()
+  if(rnd()>.4) player.dice_mods[i]=spawn_mod(1)
+  start_weapon=i==6 and spawn_rifle() or spawn_pistol()
   start_weapon.wielder=player
   add(wpn,start_weapon)
  end
- player+=cmp("has_wpn",{curr_wpn=1,wpn=wpn}) mapgen()
+ player+=cmp("has_wpn",{curr_wpn=1,wpn=wpn})
+ mapgen()
 end
 
 -->8
@@ -173,7 +176,7 @@ end
 --"pos": x y
 --"spd": spdx spdy
 --"render": anim face_left render_order
---"dice": dval
+--"dice": dval dice_mods
 --"wpn_stats": wpn_type wpn_dmg cooldown curr_cooldown nb_bullets bull_cooldown curr_bull_cooldown wielder spread bull_speed max_range
 --"has_wpn": wpn curr_wpn
 --"shooting": bullets_left targetx targety wait_shoot
@@ -182,6 +185,7 @@ end
 --"destructible" hp hitboxx hitboxy hitboxw hitboxh force_nb
 --"dying" dying_curr
 --"sprite" enemy_sprite
+--"has_name" name
 -->8
 -- update and systems
 
@@ -201,9 +205,34 @@ function _update()
   -- no more enemies
   if _cmps["ai"]==nil or #_cmps["ai"]==0 then
    mode=12
-   generate_loot()
+   won_level()
   end
  end
+end
+
+function won_level()
+ generate_loot()
+ sys_del_bullets()
+ sys_del_dying()
+ screen_shake=0
+ player.wpn[player.curr_wpn]-="shooting"
+ _msgs={}
+end
+
+function player_chosed_face(i)
+ if loot_chosen==1 then
+  player.wpn[i]=loot_w
+ else
+  player.dice_mods[i]=loot_m
+ end
+ mapgen()
+end
+
+function player_chosed_reward(i)
+ mode=13
+ loot_chosen=i
+ if(i==0) del_ent(loot_m)
+ if(i==1) del_ent(loot_w)
 end
 
 function player_input()
@@ -361,7 +390,17 @@ sys_die=sys({"dying"},
   e.dying_curr-=1
   if(e.dying_curr==0) del_ent(e)
  end)
+ 
+sys_del_bullets=sys({"bullet"},
+ function(e)
+  del_ent(e)
+ end)
 
+sys_del_dying=sys({"dying"},
+ function(e)
+  del_ent(e)
+ end)
+ 
 sys_update_pos=sys({"pos","spd","render"},
  function(e)
   if is(e,"has_wpn") and is(e.wpn[e.curr_wpn],"shooting") then
@@ -438,14 +477,108 @@ function _draw()
   	-- aim
    spr(48,stat(32)-3,stat(33)-3)
   end
+	 if screen_shake>0 then
+	  screen_shake-=1
+	  camera(rnd(2)-1,rnd(2)-1)
+	 else
+	  camera(0,0)
+	 end
   if(mode==11) print("\014gAME oVER!",40,60)
+ elseif mode==12 or mode==13 then
+  cls(1)
+  nprint("\014iNVENTORY",5,2,7)
+  for i=1,6 do
+   local y=19*i-5
+   local c=6
+   local dy=0
+   if mode==13 then
+    if stat(32)>1 and stat(32)<60 and stat(33)>y-2 and stat(33)<y+16 then
+     c=10
+     dy=2-abs(flr(2*cos(t())+.5))
+	    if(stat(34)&1>0) player_chosed_face(i)
+    else
+     c=9
+    end
+   end
+   nprint("face "..i,7,y-dy,c)
+   -- weapon sprite
+   local sprite=0
+   if mode==13 and c==10 and loot_chosen==1 then
+    sprite=loot_w.wpn_type*2+80
+   else
+    sprite=player.wpn[i].wpn_type*2+80
+   end   
+   spr(sprite,34,y-2,2,1)
+   local m=player.dice_mods[i]
+   local cm=6
+   if mode==13 and c==10 and loot_chosen==2 then
+    m=loot_m
+    cm=10
+   end
+   if m==nil then
+    nprint("nO MOD",2,y+8,5)
+   else
+    nprint(m.mod_title,2,y+8,cm)
+   end
+  end
+  if mode==12 and t()%1<.8 then
+   nprint("cHOOSE A",75,20,7)
+   nprint("REWARD!",75,27,7)
+  elseif mode==13 and t()%1<.8 then
+   if loot_chosen==1 then
+    nprint("wHICH FACE",75,20,7)
+    nprint("FOR THIS GUN?",70,27,7)
+   else
+    nprint("wHICH FACE",75,20,7)
+    nprint("FOR THIS MOD?",70,27,7)
+   end    
+  end
+  local w=64
+  local h={30,14+8*#loot_m.mod_text}
+  local x=60
+  local y={40,100-h[2]/2}
+  local c={}
+  for i=1,2 do
+   -- highlight
+   if mode==12 or (mode==13 and loot_chosen==i) then
+	   if mode==13 or (stat(32)>x and stat(32)<x+w and stat(33)>y[i] and stat(33)<y[i]+h[i]) then
+	    if(mode==12 and stat(34)&1>0) player_chosed_reward(i)
+	    c[i]=10
+	   else
+	    c[i]=9
+	   end
+	   for dx=-1,1 do
+	 	  rect(x-dx,y[i]-dx,x+w+dx,y[i]+h[i]+dx,dx==0 and c[i] or 0)
+	   end
+		  nprint("reward "..i,x+13,y[i]-2,c[i])
+	  end
+  end
+  -- weapon
+  if mode==12 or loot_chosen==1 then
+   sspr(loot_w.wpn_type*16,40,16,8,x+10,y[1]+3,32,16)
+   nprint(loot_w.name,x+1+w/2-#loot_w.name*2,y[1]+21,c[1])
+  end
+  -- modifier
+  if mode==12 or loot_chosen==2 then
+	  nprint(loot_m.mod_title,x+1+w/2-#loot_m.mod_title*2,y[2]+6,c[2])
+	  local my=y[2]+14
+	  for i=1,#loot_m.mod_text do
+	   nprint(loot_m.mod_text[i],x+4,my,7)
+	   my+=8
+	  end
+  end
+  -- mouse
+  spr(9,stat(32)-1,stat(33)-1)
  end
- if screen_shake>0 then
-  screen_shake-=1
-  camera(rnd(2)-1,rnd(2)-1)
- else
-  camera(0,0)
+end
+
+function nprint(s,x,y,c)
+ for dx=-1,1 do
+  for dy=-1,1 do
+   ?s,x+dx,y+dy,0
+  end
  end
+ ?s,x,y,c
 end
 
 -- todo: render order
@@ -618,24 +751,28 @@ end
 function spawn_rifle()
  local w=ent()
  w+=cmp("wpn_stats",{wpn_type=3,wpn_dmg=1,cooldown=10,curr_cooldown=0,nb_bullets=3,bull_cooldown=3,curr_bull_cooldown=0,wielder=false,spread=5,bull_speed=1.8,max_range=70})
+ w+=cmp("has_name",{name="rifle"})
  return w
 end
 
 function spawn_sniper()
  local w=ent()
  w+=cmp("wpn_stats",{wpn_type=4,wpn_dmg=5,cooldown=50,curr_cooldown=0,nb_bullets=1,bull_cooldown=0,curr_bull_cooldown=0,wielder=false,spread=0,bull_speed=6,max_range=300})
+ w+=cmp("has_name",{name="sniper rifle"})
  return w
 end
 
---function spawn_pistol()
--- local w=ent()
--- w+=cmp("wpn_stats",{wpn_type=1,wpn_dmg=3,cooldown=10,curr_cooldown=0,nb_bullets=1,bull_cooldown=0,curr_bull_cooldown=0,wielder=false,spread=1,bull_speed=1.5,max_range=40})
--- return w
---end
+function spawn_pistol()
+ local w=ent()
+ w+=cmp("wpn_stats",{wpn_type=1,wpn_dmg=3,cooldown=10,curr_cooldown=0,nb_bullets=1,bull_cooldown=0,curr_bull_cooldown=0,wielder=false,spread=1,bull_speed=1.5,max_range=40})
+ w+=cmp("has_name",{name="pistol"})
+ return w
+end
 
 function spawn_shotgun()
  local w=ent()
  w+=cmp("wpn_stats",{wpn_type=2,wpn_dmg=1,cooldown=20,curr_cooldown=0,nb_bullets=10,bull_cooldown=0,curr_bull_cooldown=0,wielder=false,spread=20,bull_speed=2,max_range=30})
+ w+=cmp("has_name",{name="shotgun"})
  return w
 end
 
@@ -646,23 +783,32 @@ end
 --end
 
 function spawn_weapon(t)
- if(t==0) return spawn_rifle()
- if(t==1) return spawn_shotgun()
- if(t==2) return spawn_sniper()
+ if(t==1) return spawn_rifle()
+ if(t==2) return spawn_shotgun()
+ if(t==3) return spawn_sniper()
 end
 
-function spawn_mod()
+function spawn_mod(t)
  e=ent()
- e+=cmp("is_mod",{})
+ local m
+ if(t==0) m={mod_title="lOADED fACE",mod_text=   {"fACE IS MORE","LIKELY"}}
+ if(t==1) m={mod_title="lIGHTENED fACE",mod_text={"fACE IS LESS","LIKELY"}}
+ if(t==2) m={mod_title="eXPL. bULLET",mod_text=  {"eXTRA DAMAGE","PER BULLET"}}
+ if(t==3) m={mod_title="tRIGGER hAPPY",mod_text={"oNE EXTRA","BULLET PER","VOLLEY"}}
+ if(t==4) m={mod_title="aRMORED fACE",mod_text={"tAKE ONE LESS","DAMAGE"}}
+ if(t==5) m={mod_title="aCTIVE cOOLING",mod_text={"dECREASE","WEAPON COOLDOWN"}}
+ if(t==6) m={mod_title="sCOPE",mod_text={"rEDUCE ATTACK","SPREAD"}}
+ m.mod_type=t
+ e+=cmp("is_mod",m)
  return e
 end
 
 function generate_loot()
  -- don't forget to destroy what is not accepted!
  local t={1,1,1,2,2,3}
- local w1=spawn_weapon(rnd(t))
- local w2=spawn_weapon(rnd(t))
-
+ loot_w=spawn_weapon(rnd(t))
+ loot_w.wielder=player
+ loot_m=spawn_mod(3)
 end
 -->8
 -- ai
@@ -731,6 +877,7 @@ dir={[0]={-1,0},{1,0},{0,-1},{0,1}}
 
 function mapgen()
  depth+=1
+ mode=10
  first_step()
  second_step()
  set_bitset_wall()
@@ -856,7 +1003,7 @@ end
 function populate()
  local x,y=get_empty_space()
  player.x,player.y=x*8+rnd(7),y*8+rnd(7)
- local todo_enemies=0
+ local todo_enemies=1
  while todo_enemies>0 do
   local x,y=get_empty_space()
   x,y=x*8+rnd(7),y*8+rnd(7)
@@ -879,13 +1026,13 @@ function get_empty_space()
 end
 
 __gfx__
-00000000ee000000000eeeeee9ee9eee8e8e8e8e9eeee9eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee7eeeeee77eeeeee777eeeee7eeeeeee777eeeee7eeeeeee
-00000000e00555555550eeeee9ee9eeee8eee8eee9ee9eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee77eeeeeeee7eeeeeee7eeeee7e7eeeee77eeeeee777eeeee
-00000000e050555555550eeeeeeeeeee8e8e8e8eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee7eeeeeee7eeeeeee77eeeee777eeeeee77eeeee7e7eeeee
-00000000e0550555555550eeeeeee9eeeeeeeeeee9999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee777eeeee777eeeee777eeeeeee7eeeee777eeeee777eeeee
-00000000e05550000000000ee9999eeee88888ee9eeee9eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-00000000e05550666666660eeeeeeeeeeeee8eee9e99e9eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-00000000e05550666666660eeeeeeeeeeeeeeeeee9999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+00000000ee000000000eeeeee9ee9eee8e8e8e8e9eeee9eeeeeeeeeeeeeeeeeeeeeeeeeee0eeeeeee7eeeeee77eeeeee777eeeee7eeeeeee777eeeee7eeeeeee
+00000000e00555555550eeeee9ee9eeee8eee8eee9ee9eeeeeeeeeeeeeeeeeeeeeeeeeee070eeeee77eeeeeeee7eeeeeee7eeeee7e7eeeee77eeeeee777eeeee
+00000000e050555555550eeeeeeeeeee8e8e8e8eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee0770eeeee7eeeeeee7eeeeeee77eeeee777eeeeee77eeeee7e7eeeee
+00000000e0550555555550eeeeeee9eeeeeeeeeee9999eeeeeeeeeeeeeeeeeeeeeeeeeee07770eee777eeeee777eeeee777eeeeeee7eeeee777eeeee777eeeee
+00000000e05550000000000ee9999eeee88888ee9eeee9eeeeeeeeeeeeeeeeeeeeeeeeee077770eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+00000000e05550666666660eeeeeeeeeeeee8eee9e99e9eeeeeeeeeeeeeeeeeeeeeeeeee07700eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+00000000e05550666666660eeeeeeeeeeeeeeeeee9999eeeeeeeeeeeeeeeeeeeeeeeeeeee0070eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 00000000e05550666666660eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeee05550666666660eeeeeeeeeeeee6eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee66eeee99eeeeee9eeeeeee9eeeeeeee9eeeeeeeeeeeeeeeeeeeeee
 eeeeeeeee05550666666660eeeeeeeeeeee6ee6666eeeeeeeeeeee6666eeeeeeeeeeee6666ee6eeeeeeeeeee9eeeeeeee9eeeeee9eeeeeeeeeeeeeeeeeeeeeee
