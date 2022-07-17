@@ -24,12 +24,13 @@ function _init()
 	drag=0.5
 	
 	enemy_wait_shoot=5
- bull_speed=1.8
  --
 	mode=10
 	-- modes:
 	-- 0: title
 	-- 10: game
+	-- 11: game over
+	-- 12: choose upgrade
 end
 
 function init_game()
@@ -45,9 +46,13 @@ function init_game()
  player+=cmp("spd",{spdx=0,spdy=0})
  player+=cmp("render",{anim=anim_idle,face_left=true,render_order=1})
  player+=cmp("dice",{dval=1})
- start_weapon=spawn_rifle()
- start_weapon.wielder=player
- player+=cmp("has_wpn",{curr_wpn=1,wpn={start_weapon}}) mapgen()
+ local wpn={}
+ for i=1,6 do
+  start_weapon=i>2 and spawn_rifle() or spawn_shotgun()
+  start_weapon.wielder=player
+  add(wpn,start_weapon)
+ end
+ player+=cmp("has_wpn",{curr_wpn=1,wpn=wpn}) mapgen()
 end
 
 -->8
@@ -81,6 +86,7 @@ function ent()
 	  assert(false,"field not found:"..a)
   end,
   __newindex=function(self,a,v)
+   assert(v!=nil)
 	  for _,t in pairs(self) do
 	   if(t[a]!=nil) t[a]=v return
 	  end
@@ -168,13 +174,14 @@ end
 --"spd": spdx spdy
 --"render": anim face_left render_order
 --"dice": dval
---"wpn_stats": wpn_type wpn_dmg cooldown curr_cooldown nb_bullets bull_cooldown curr_bull_cooldown wielder spread
+--"wpn_stats": wpn_type wpn_dmg cooldown curr_cooldown nb_bullets bull_cooldown curr_bull_cooldown wielder spread bull_speed max_range
 --"has_wpn": wpn curr_wpn
 --"shooting": bullets_left targetx targety wait_shoot
 --"rolling" roll_time
---"bullet" bull_dmg force_src
+--"bullet" bull_dmg force_src bull_ttl
 --"destructible" hp hitboxx hitboxy hitboxw hitboxh force_nb
 --"dying" dying_curr
+--"sprite" enemy_sprite
 -->8
 -- update and systems
 
@@ -191,6 +198,11 @@ function _update()
   sys_update_pos()
   sys_die()
   sys_collision()
+  -- no more enemies
+  if _cmps["ai"]==nil or #_cmps["ai"]==0 then
+   mode=12
+   generate_loot()
+  end
  end
 end
 
@@ -260,7 +272,7 @@ function sys_collision()
      else
 	     e.hp-=b.bull_dmg
 	     add_msg(e,"-"..b.bull_dmg)
-	     if e.hp==0 then
+	     if e.hp<=0 then
 	      if is(e,"ai") then
 		      e+=cmp("dying",{dying_curr=10})
 		      e-="destructible"
@@ -288,6 +300,7 @@ function sys_roll()
    player-="rolling"
    player.anim=anim_idle
    player.dval=1+flr(rnd(6))
+   player.curr_wpn=player.dval
    add_msg(player,"\014"..player.dval.."!")
   end
  end
@@ -297,15 +310,22 @@ sys_shoot=sys({"shooting"},
  function(e)
   if(e.wait_shoot>0) e.wait_shoot-=1
   if e.wait_shoot==0 then
-	  if e.curr_bull_cooldown==0 then
+	  while is(e,"shooting") and e.curr_bull_cooldown==0 do
 	   if(e.wielder==player) screen_shake=1
 			 bullet=ent()
-			 bullet+=cmp("bullet",{force_src=e.wielder.force_nb,bull_dmg=e.wpn_dmg})
-			 bullet+=cmp("pos",{x=e.wielder.x,y=e.wielder.y})
+			 bullet+=cmp("bullet",{force_src=e.wielder.force_nb,bull_dmg=e.wpn_dmg,bull_ttl=ceil(e.max_range/e.bull_speed)})
+			 local x=e.wielder.x
+			 if e.wielder.face_left then
+			  x-=5
+			 else
+			  x+=5
+			 end
+			 bullet+=cmp("pos",{x=x,y=e.wielder.y+3})
 			 bullet+=cmp("render",{anim=anim_bullet,face_left=true,render_order=2})
 			 local dx=e.targetx-e.wielder.x
 	   local dy=e.targety-e.wielder.y
 	   local d=1+sqrt(dx*dx+dy*dy)
+	   local bull_speed=e.bull_speed
 	   local spdx=bull_speed*dx/d
 	   local spdy=bull_speed*dy/d
 	   if e.spread>0 then
@@ -326,9 +346,8 @@ sys_shoot=sys({"shooting"},
 			 else
 	 		 e.curr_bull_cooldown=e.bull_cooldown
 			 end
-		 else
-		  e.curr_bull_cooldown-=1
 		 end
+		 if(is(e,"shooting")) e.curr_bull_cooldown-=1
 	 end
  end)
 
@@ -354,6 +373,12 @@ sys_update_pos=sys({"pos","spd","render"},
   local nextx=e.x+e.spdx
   local nexty=e.y+e.spdy
   -- collision with map
+  
+  if is(e,"bullet") then
+   if(e.bull_ttl==0) del_ent(e)
+   e.bull_ttl-=1
+  end
+  
   if not fget(mget(nextx\8,nexty\8),0) then
    e.spdx=0
    e.spdy=0
@@ -400,17 +425,21 @@ end
 -- draw
 
 function _draw()
-	cls(1)
-	map()
- sys_draw(1) -- char
- sys_draw(2) -- bullets
- sys_draw_hitbox()
- render_msgs()
- if mode==10 then
- 	-- aim
-  spr(48,stat(32)-3,stat(33)-3)
+ if mode==10 or mode==11 then
+		cls(1)
+		map()
+	 sys_draw(1) -- char
+	 sys_draw(2) -- bullets
+	 -- redraw some walls
+	 map(nil,nil,nil,nil,nil,nil,2)
+	 sys_draw_hitbox()
+	 render_msgs()
+  if mode==10 then
+  	-- aim
+   spr(48,stat(32)-3,stat(33)-3)
+  end
+  if(mode==11) print("\014gAME oVER!",40,60)
  end
- if(mode==11) print("\014gAME oVER!",40,60)
  if screen_shake>0 then
   screen_shake-=1
   camera(rnd(2)-1,rnd(2)-1)
@@ -428,12 +457,11 @@ sys_draw=sys({"render","pos"},
    if is(e,"has_wpn") then
     local w=e.wpn[e.curr_wpn]
     if e.face_left then
-     spr(w.wpn_type*2+80,e.x-15,e.y+1,2,1,true)
+     spr(w.wpn_type*2+80,e.x-14,e.y,2,1,true)
     else
-     spr(w.wpn_type*2+80,e.x-2,e.y+1,2,1)
+     spr(w.wpn_type*2+80,e.x-2,e.y,2,1)
     end
    end
-   pset(e.x,e.y,12)
   end
  end)
 
@@ -442,6 +470,7 @@ sys_draw_hitbox=sys({"destructible","pos"},
   local x=flr(e.x)+e.hitboxx
   local y=flr(e.y)+e.hitboxy
   rect(x,y,x+e.hitboxw-1,y+e.hitboxh-1,9)
+  pset(e.x,e.y,12)
  end)
  
 function draw_base(e,face,dead)
@@ -502,19 +531,25 @@ end
 function anim_bullet(e)
  -- bullet have no sprite symmetry
  local a=abs(e.spdx/e.spdy)
+ local s=0
+ if(e.force_src==1) s=16
  if a<2 and a>0.5 then
-  spr(28,e.x,e.y,1,1,e.spdx*e.spdy<0) 
+  if e.spdx*e.spdy<0 then
+   spr(s+29,e.x,e.y)
+  else
+   spr(s+28,e.x,e.y)
+  end
  elseif abs(e.spdx)>abs(e.spdy) then
-  spr(26,e.x,e.y)
+  spr(s+26,e.x,e.y)
  else
-  spr(27,e.x,e.y) 
+  spr(s+27,e.x,e.y) 
  end
 end
 
 ---------------------
 
 function anim_enemy_idle(e)
- spr(50,e.x-3,e.y-5,1,2,not e.face_left)
+ spr(e.enemy_sprite+50,e.x-3,e.y-5,1,2,not e.face_left)
 end
 
 function anim_enemy_move(e)
@@ -522,11 +557,11 @@ function anim_enemy_move(e)
 end
 
 function anim_enemy_die(e)
- spr(51,e.x-3,e.y-5,1,2,not e.face_left)
+ spr(e.enemy_sprite+51,e.x-3,e.y-5,1,2,not e.face_left)
 end
 
 function anim_enemy_shoot(e)
- spr(49,e.x-3,e.y-5,1,2,not e.face_left)
+ spr(e.enemy_sprite+49,e.x-3,e.y-5,1,2,not e.face_left)
 end
 
 -- msg
@@ -553,12 +588,23 @@ end
 
 function spawn_enemy(x,y,enemy_type)
  local hp,w,ai_type
+ e=ent()
  if enemy_type==0 then
+  e+=cmp("sprite",{enemy_sprite=0})
   hp=3
   w=spawn_rifle()
   ai_type=0
+ elseif enemy_type==1 then
+  e+=cmp("sprite",{enemy_sprite=3})
+  hp=2
+  w=spawn_sniper()
+  ai_type=0
+ else
+  e+=cmp("sprite",{enemy_sprite=6})
+  hp=5
+  w=spawn_shotgun()
+  ai_type=0
  end
- e=ent()
  e+="collide"
  e+=cmp("destructible",{hp=hp,hitboxx=-3,hitboxy=-5,hitboxw=8,hitboxh=12,force_nb=2})
  e+=cmp("pos",{x=x,y=y})
@@ -571,14 +617,52 @@ end
 
 function spawn_rifle()
  local w=ent()
- w+=cmp("wpn_stats",{wpn_type=3,wpn_dmg=1,cooldown=10,curr_cooldown=0,nb_bullets=3,bull_cooldown=1,curr_bull_cooldown=0,wielder=false,spread=5})
+ w+=cmp("wpn_stats",{wpn_type=3,wpn_dmg=1,cooldown=10,curr_cooldown=0,nb_bullets=3,bull_cooldown=3,curr_bull_cooldown=0,wielder=false,spread=5,bull_speed=1.8,max_range=70})
  return w
 end
 
 function spawn_sniper()
  local w=ent()
- w+=cmp("wpn_stats",{wpn_dmg=3,cooldown=10,curr_cooldown=0,nb_bullets=1,bull_cooldown=2,curr_bull_cooldown=0,wielder=false,spread=0})
+ w+=cmp("wpn_stats",{wpn_type=4,wpn_dmg=5,cooldown=50,curr_cooldown=0,nb_bullets=1,bull_cooldown=0,curr_bull_cooldown=0,wielder=false,spread=0,bull_speed=6,max_range=300})
  return w
+end
+
+--function spawn_pistol()
+-- local w=ent()
+-- w+=cmp("wpn_stats",{wpn_type=1,wpn_dmg=3,cooldown=10,curr_cooldown=0,nb_bullets=1,bull_cooldown=0,curr_bull_cooldown=0,wielder=false,spread=1,bull_speed=1.5,max_range=40})
+-- return w
+--end
+
+function spawn_shotgun()
+ local w=ent()
+ w+=cmp("wpn_stats",{wpn_type=2,wpn_dmg=1,cooldown=20,curr_cooldown=0,nb_bullets=10,bull_cooldown=0,curr_bull_cooldown=0,wielder=false,spread=20,bull_speed=2,max_range=30})
+ return w
+end
+
+--function spawn_knife()
+-- local w=ent()
+-- w+=cmp("wpn_stats",{wpn_type=0,wpn_dmg=5,cooldown=20,curr_cooldown=0,nb_bullets=0,bull_cooldown=0,curr_bull_cooldown=0,wielder=false,spread=0,bull_speed=0,max_range=0})
+-- return w
+--end
+
+function spawn_weapon(t)
+ if(t==0) return spawn_rifle()
+ if(t==1) return spawn_shotgun()
+ if(t==2) return spawn_sniper()
+end
+
+function spawn_mod()
+ e=ent()
+ e+=cmp("is_mod",{})
+ return e
+end
+
+function generate_loot()
+ -- don't forget to destroy what is not accepted!
+ local t={1,1,1,2,2,3}
+ local w1=spawn_weapon(rnd(t))
+ local w2=spawn_weapon(rnd(t))
+
 end
 -->8
 -- ai
@@ -605,6 +689,7 @@ sys_ai_act=sys({"ai"},
    e.anim=anim_enemy_idle
   end
   
+  local w=e.wpn[e.curr_wpn]
   if e.ai_state==0 then
    if e.ai_var==0 and rnd()<.1 then
     -- start walking
@@ -619,7 +704,7 @@ sys_ai_act=sys({"ai"},
    if e.ai_var==0 and rnd()<.1 then
     local dx=player.x-e.x
     local dy=player.y-e.y
-    if abs(dx)+abs(dy)>100 then -- come closer
+    if abs(dx)+abs(dy)>0.8*w.max_range then -- come closer
      local d=sqrt(dx*dx+dy*dy)
      local walk_speed=.8
      e.ai_var=2
@@ -627,7 +712,6 @@ sys_ai_act=sys({"ai"},
      e.spdx=walk_speed*dx/d
      e.spdy=walk_speed*dy/d
     else -- attack
-			  local w=e.wpn[e.curr_wpn]
 		   if not is(e.wpn[e.curr_wpn],"shooting") and w.curr_cooldown==0 then
 		    shoot(e,w,player.x,player.y,enemy_wait_shoot)
 		    w.wielder.anim=anim_enemy_shoot
@@ -772,12 +856,14 @@ end
 function populate()
  local x,y=get_empty_space()
  player.x,player.y=x*8+rnd(7),y*8+rnd(7)
- local todo_enemies=10
+ local todo_enemies=0
  while todo_enemies>0 do
   local x,y=get_empty_space()
   x,y=x*8+rnd(7),y*8+rnd(7)
-  if abs(x-player.x)>20 and abs(y-player.y)>20 then
-   spawn_enemy(x,y,0)
+  if abs(x-player.x)>30 and abs(y-player.y)>30 then
+   local typ=flr(rnd(3))
+   spawn_enemy(x,y,typ)
+   if(typ==1) todo_enemies-=2
    todo_enemies-=1
   end
  end
@@ -801,37 +887,37 @@ __gfx__
 00000000e05550666666660eeeeeeeeeeeee8eee9e99e9eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 00000000e05550666666660eeeeeeeeeeeeeeeeee9999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 00000000e05550666666660eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeee05550666666660eeeeeeeeeeeee6eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee66eeee99eeeeee9eeeeeee9eeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeee05550666666660eeeeeeeeeeee6ee6666eeeeeeeeeeee6666eeeeeeeeeeee6666ee6eeeeeeeeeee9eeeeeeee9eeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeee05550666666660eeeeeeeeeeeee6eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee66eeee99eeeeee9eeeeeee9eeeeeeee9eeeeeeeeeeeeeeeeeeeeee
+eeeeeeeee05550666666660eeeeeeeeeeee6ee6666eeeeeeeeeeee6666eeeeeeeeeeee6666ee6eeeeeeeeeee9eeeeeeee9eeeeee9eeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeee0550666666660eeeeeeeeeeee6e655556eeeeeeeeee655556eeeeeeeeee655556eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeeee050666666660eeeeeeeeeeeee65500556eeeeeeee65566556e6eeeeee65555556eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeeeee00666666660eeeeeeeeeeee6555550556eee6ee6555556556e6eeee6555500556eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeeeeee000000000eeeeeeeeeeeee6550555056eeee6e6550555656ee6eee6555655056eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee65055555556eeee665055556556eeeee65565555056eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee65055555556eeeee65055555556eee6e65565555056eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-01111111eeeeeeeeeeeeeeeeeeeeeeeeeee65055555656eeeee65505555056eee6e65565555556eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-10111111eeeeeeeeeeeeeeeeeeeeeeeeeeee6505555656eeeeee6555550556eeee6e6556555056eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+01111111eeeeeeeeeeeeeeeeeeeeeeeeeee65055555656eeeee65505555056eee6e65565555556ee66eeeeee6eeeeeee6eeeeeeee6eeeeeeeeeeeeeeeeeeeeee
+10111111eeeeeeeeeeeeeeeeeeeeeeeeeeee6505555656eeeeee6555550556eeee6e6556555056eeeeeeeeee6eeeeeeee6eeeeee6eeeeeeeeeeeeeeeeeeeeeee
 11011111eeeeeeeeeeeeeeeeeeeeeeeeeeee6555556556eeeeee6555005556eeeeee6555500556eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 11101111eeeeeeeeeeeeeeeeeeeeeeeeee6ee65566556e6eeeeee65555556eeeeeeee65555556eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 11010111eeeeeeeeeeeeeeeeeeeeeeeeeee66e655556ee6eeeeeee655556eeeeeeeeee655556eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 10111011eeeeeeeeeeeeeeeeeeeeeeeeeeeeeee6666ee6eeeeeeeee6666eeeeeeeeeeee6666eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 01111101eee0eeeeeee0eeeeeee0eeeeeeeeeeeeeeeeeeeeeeeee66eeeeeeeeeeeeeeeeeeee6eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 11111110ee0eeeeeeeee0eeeeee0eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee66eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eee6eeeeeeeeeeeeeeeeeeeeee6226eeeeeeeeeeeeeeeeeeeeee666eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eee6eeeeee6226eeee6226eee662266eeeee666eeeee666eee667776eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeee662266ee662266ee222222eee667776ee667776e6777776eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-66eee66ee222222ee222222eee272722e6777776e6777776e67878eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeee2272227222272722eee22226e6777776e6787876e6888eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eee6eeee622727266227272622ee7222e6787876e6888886e67eee76eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eee6eeee2222222222222222622eeeeee6788876e6788876eeeee886eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeee222722ee222222e2222eeeee6778776e6778776eee88876eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeee662266ee662266ee222222ee6777776e6777776e6778776eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeee6226eeee6226eee662266ee6777776e6777776e6777776eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeee0e0eeeee0e0eeeee6226eee677766ee677766ee6777776eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeee0e0eeeee0e0eeeee0e0eeeee666eeeee666eeee677766eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeee0e0eeeee0e0eeeee0e0eeeee0e0eeeee0e0eeeee666eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeee0e0eeeee0e0eeeee0e0eeeee0e0eeeee0e0eeeee0e0eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeee0e0eeeee0e0eeeee0e0eeeee0e0eeeee0e0eeeee0e0eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eee6eeeeeeeeeeeeeeeeeeeeee6226eeeeeeeeeeeeeeeeeeeee666eeeeeeeeeeeeeeeeeeeee666eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eee6eeeeee6226eeee6226eee662266eeeee666eeee666eee667776eeee666eeeee666eee667776eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeee662266ee662266ee222222eee667776e667776e6777776ee667776ee667776e6777776eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+66eee66ee222222ee222222eee272722e67777766777776e67878eee6777776e6777776e6770776eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeee2272227222272722eee22226e67878766787876e6888eeee6770776e6770776e6700076eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eee6eeee622727266227272622ee7222e68888866888886e67eee76e6700076e6700076eeeee006eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eee6eeee2222222222222222622eeeeee67888766788876eeeee886e6000006e6000006eeeeeee6eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeee222722ee222222e2222eeeee67787766778776eee88876e6070706e6070706e6000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeee662266ee662266ee222222ee67777766777776e6778776e6770776e6770776e607070eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeee6226eeee6226eee662266ee67777766777776e6777776e6777776e6777776e6770776eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeee0e0eeeee0e0eeeee6226eee677766e677766ee6777776e677766ee677766ee6777776eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeee0e0eeeee0e0eeeee0e0eeeee666eeee666eeee677766eee666eeeee666eeee677766eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeee0e0eeeee0e0eeeee0e0eeeee0e0eeee0e0eeeee666eeeee0e0eeeee0e0eeeee666eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeee0e0eeeee0e0eeeee0e0eeeee0e0eeee0e0eeeee0e0eeeee0e0eeeee0e0eeeee0e0eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeee0e0eeeee0e0eeeee0e0eeeee0e0eeee0e0eeeee0e0eeeee0e0eeeee0e0eeeee0e0eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeeeeeee76eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeeeeee766eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee555eee33eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
@@ -913,14 +999,14 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-01111111777777777777777777777777777777777000000777777777700000007777777777777777777777777777777777777777000000077777777700000000
-14444411dddddddddddddddddddddddd70000007700000077000000070000000dddddddddddddddddddddddddddddddd00000007000000070000000000000000
-44444441dddddddddddddddddddddddd70000007700000077000000070000000dddddddddddddddddddddddddddddddd00000007000000070000000000000000
-14999411dddddddddddddddddddddddd70000007700000077000000070000000dddddddddddddddddddddddddddddddd00000007000000070000000000000000
-11020111dddddddddddddddddddddddd70000007700000077000000070000000dddddddddddddddddddddddddddddddd00000007000000070000000000000000
-10121011dddddddddddddddddddddddd70000007700000077000000070000000dddddddddddddddddddddddddddddddd00000007000000070000000000000000
-012221015dd55dd55dd55dd55dd55dd5700000077000000770000000700000005dd55dd55dd55dd55dd55dd55dd55dd500000007000000070000000000000000
-12111210555555555555555555555555700000077000000770000000700000005555555555555555555555555555555500000007000000070000000000000000
+eeeeeeee777777777777777777777777777777777000000777777777700000007777777777777777777777777777777777777777000000077777777700000000
+e44444eedddddddddddddddddddddddd70000007700000077000000070000000dddddddddddddddddddddddddddddddd00000007000000070000000000000000
+4444444edddddddddddddddddddddddd70000007700000077000000070000000dddddddddddddddddddddddddddddddd00000007000000070000000000000000
+e49994eedddddddddddddddddddddddd70000007700000077000000070000000dddddddddddddddddddddddddddddddd00000007000000070000000000000000
+eee2eeeedddddddddddddddddddddddd70000007700000077000000070000000dddddddddddddddddddddddddddddddd00000007000000070000000000000000
+eee2eeeedddddddddddddddddddddddd70000007700000077000000070000000dddddddddddddddddddddddddddddddd00000007000000070000000000000000
+ee222eee5dd55dd55dd55dd55dd55dd5700000077000000770000000700000005dd55dd55dd55dd55dd55dd55dd55dd500000007000000070000000000000000
+e2eee2ee555555555555555555555555700000077000000770000000700000005555555555555555555555555555555500000007000000070000000000000000
 __label__
 88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
 88888eeeeee888eeeeee888eeeeee888777777888eeeeee888eeeeee888eeeeee888888888888888888ff8ff8888228822888222822888888822888888228888
@@ -1053,4 +1139,4 @@ __label__
 
 __gff__
 0001000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020202020000000002020202
